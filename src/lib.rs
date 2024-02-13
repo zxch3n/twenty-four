@@ -162,6 +162,7 @@ mod tests {
         println!("{}", solve_24(9, 9, 8, 3).unwrap());
         println!("{}", solve_24(9, 2, 7, 6).unwrap());
         println!("{}", solve_24(9, 9, 8, 3).unwrap());
+        println!("{}", solve_24(11, 12, 13, 9).unwrap());
         assert!(solve_24(2, 2, 2, 2).is_none());
         assert!(solve_24(1, 1, 1, 1).is_none());
     }

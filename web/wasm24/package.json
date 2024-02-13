@@ -1,0 +1,17 @@
+{
+  "name": "wasm24",
+  "version": "0.7.0",
+  "license": "Apache-2.0/MIT",
+  "files": [
+    "wasm24_bg.wasm",
+    "wasm24.js",
+    "wasm24_bg.js",
+    "wasm24.d.ts"
+  ],
+  "module": "wasm24.js",
+  "types": "wasm24.d.ts",
+  "sideEffects": [
+    "./wasm24.js",
+    "./snippets/*"
+  ]
+}
