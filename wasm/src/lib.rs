@@ -19,6 +19,6 @@ macro_rules! console_log {
 }
 
 #[wasm_bindgen]
-pub fn solve(target: u8, list: Vec<u8>) -> Option<String> {
+pub fn solve(target: u16, list: Vec<u16>) -> Option<String> {
     Some(solve_list(target, &list)?.show())
 }

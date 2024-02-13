@@ -1,12 +1,8 @@
-use std::{
-    cell::RefCell,
-    fmt::{write, Display},
-    rc::Rc,
-};
+use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 #[derive(Debug, Clone)]
 pub struct Value {
-    value: u8,
+    value: u16,
     from: Option<Rc<RefCell<Op>>>,
     should_have_brackets: bool,
 }
@@ -55,8 +51,8 @@ fn recursive_remove_brackets(root: &mut Value) {
     inner(root)
 }
 
-impl From<u8> for Value {
-    fn from(value: u8) -> Self {
+impl From<u16> for Value {
+    fn from(value: u16) -> Self {
         Value {
             value,
             from: None,
@@ -197,7 +193,7 @@ fn div(a: &Value, b: &Value) -> Option<Value> {
 }
 
 fn try_solve_list(
-    target: u8,
+    target: u16,
     list: &mut Vec<Value>,
     a: &Value,
     b: &Value,
@@ -213,7 +209,7 @@ fn try_solve_list(
     None
 }
 
-fn solve_inner(target: u8, list: &[Value]) -> Option<Value> {
+fn solve_inner(target: u16, list: &[Value]) -> Option<Value> {
     if list.len() == 1 {
         if list[0].value == target {
             return Some(list[0].clone());
@@ -250,18 +246,13 @@ fn solve_inner(target: u8, list: &[Value]) -> Option<Value> {
     None
 }
 
-pub fn solve_list(target: u8, list: &[u8]) -> Option<Value> {
+pub fn solve_list(target: u16, list: &[u16]) -> Option<Value> {
     let list: Vec<Value> = list.iter().map(|x| (*x).into()).collect::<Vec<_>>();
     solve_inner(target, &list)
 }
 
-pub fn solve(target: u8, a: u8, b: u8, c: u8, d: u8) -> Option<Value> {
-    let list = vec![a.into(), b.into(), c.into(), d.into()];
-    solve_inner(target, &list)
-}
-
-pub fn solve_24(a: u8, b: u8, c: u8, d: u8) -> Option<Value> {
-    solve(24, a, b, c, d)
+pub fn solve_24(a: u16, b: u16, c: u16, d: u16) -> Option<Value> {
+    solve_list(24, &[a, b, c, d])
 }
 
 #[cfg(test)]

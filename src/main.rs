@@ -9,7 +9,7 @@ pub fn main() {
             .iter()
             .skip(1)
             .map(|x| x.parse().unwrap())
-            .collect::<Vec<u8>>(),
+            .collect::<Vec<u16>>(),
     );
     if let Some(ans) = ans {
         println!("{}", ans);

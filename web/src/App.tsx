@@ -40,8 +40,15 @@ function App() {
                   .split(" ")
                   .map((x) => x.trim())
                   .filter(Boolean)
-                  .map((x) => parseInt(x));
-                const input = Uint8Array.from(values);
+                  .map((x) => {
+                    const ans = parseInt(x);
+                    if (ans >= 65536) {
+                      throw "Number too large"
+                    }
+
+                    return ans
+                  });
+                const input = Uint16Array.from(values);
                 const ans = solve(target, input);
                 if (ans) {
                   setAns(ans + " = " + target);
@@ -49,7 +56,7 @@ function App() {
                   setAns("No solution found");
                 }
               } catch (e) {
-                setAns("Invalid input " + e);
+                setAns("Invalid input: " + e);
               }
             }}
           >
@@ -57,8 +64,8 @@ function App() {
           </button>
         </div>
 
-        <div className="mt-3 text-left font-mono">{ans}</div>
       </div>
+      <div className="min-w-[280px] mt-3 text-left font-mono">{ans}</div>
     </div>
   );
 }
