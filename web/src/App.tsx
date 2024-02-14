@@ -53,7 +53,7 @@ function App() {
                   throw "数字个数过多，最多支持6个数字";
                 }
 
-                const input = Uint16Array.from(values);
+                const input = Int32Array.from(values);
                 const ans = solve_all(target, input);
                 if (ans.length > 0) {
                   setInfo(`共有 ${ans.length} 种解法`);
