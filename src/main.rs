@@ -9,10 +9,10 @@ pub fn main() {
             .iter()
             .skip(1)
             .map(|x| x.parse().unwrap())
-            .collect::<Vec<u16>>(),
+            .collect::<Vec<isize>>(),
     );
-    if let Some(ans) = ans {
-        println!("{}", ans);
+    if let Some(mut ans) = ans {
+        println!("{}", ans.show());
     } else {
         println!("No solution");
     }

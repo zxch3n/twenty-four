@@ -21,12 +21,12 @@ macro_rules! console_log {
 }
 
 #[wasm_bindgen]
-pub fn solve(target: u16, list: Vec<u16>) -> Option<String> {
+pub fn solve(target: isize, list: Vec<isize>) -> Option<String> {
     Some(solve_list(target, &list)?.show())
 }
 
 #[wasm_bindgen]
-pub fn solve_all(target: u16, list: Vec<u16>) -> Vec<String> {
+pub fn solve_all(target: isize, list: Vec<isize>) -> Vec<String> {
     let ans = solve_list_all(target, &list);
     let ans = ans
         .into_iter()

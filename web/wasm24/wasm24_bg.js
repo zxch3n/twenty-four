@@ -39,20 +39,20 @@ function addHeapObject(obj) {
     return idx;
 }
 
-let cachedUint16Memory0 = null;
+let cachedUint32Memory0 = null;
 
-function getUint16Memory0() {
-    if (cachedUint16Memory0 === null || cachedUint16Memory0.byteLength === 0) {
-        cachedUint16Memory0 = new Uint16Array(wasm.memory.buffer);
+function getUint32Memory0() {
+    if (cachedUint32Memory0 === null || cachedUint32Memory0.byteLength === 0) {
+        cachedUint32Memory0 = new Uint32Array(wasm.memory.buffer);
     }
-    return cachedUint16Memory0;
+    return cachedUint32Memory0;
 }
 
 let WASM_VECTOR_LEN = 0;
 
-function passArray16ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 2, 2) >>> 0;
-    getUint16Memory0().set(arg, ptr / 2);
+function passArray32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4, 4) >>> 0;
+    getUint32Memory0().set(arg, ptr / 4);
     WASM_VECTOR_LEN = arg.length;
     return ptr;
 }
@@ -67,13 +67,13 @@ function getInt32Memory0() {
 }
 /**
 * @param {number} target
-* @param {Uint16Array} list
+* @param {Int32Array} list
 * @returns {string | undefined}
 */
 export function solve(target, list) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        const ptr0 = passArray16ToWasm0(list, wasm.__wbindgen_malloc);
+        const ptr0 = passArray32ToWasm0(list, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.solve(retptr, target, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
@@ -87,15 +87,6 @@ export function solve(target, list) {
     } finally {
         wasm.__wbindgen_add_to_stack_pointer(16);
     }
-}
-
-let cachedUint32Memory0 = null;
-
-function getUint32Memory0() {
-    if (cachedUint32Memory0 === null || cachedUint32Memory0.byteLength === 0) {
-        cachedUint32Memory0 = new Uint32Array(wasm.memory.buffer);
-    }
-    return cachedUint32Memory0;
 }
 
 function getObject(idx) { return heap[idx]; }
@@ -124,13 +115,13 @@ function getArrayJsValueFromWasm0(ptr, len) {
 }
 /**
 * @param {number} target
-* @param {Uint16Array} list
+* @param {Int32Array} list
 * @returns {(string)[]}
 */
 export function solve_all(target, list) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        const ptr0 = passArray16ToWasm0(list, wasm.__wbindgen_malloc);
+        const ptr0 = passArray32ToWasm0(list, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.solve_all(retptr, target, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];

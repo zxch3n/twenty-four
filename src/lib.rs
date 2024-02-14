@@ -1,10 +1,138 @@
-use std::{cell::RefCell, fmt::Display, rc::Rc};
+use std::{
+    cell::RefCell,
+    fmt::Display,
+    ops::{Add, Div, Mul, Neg, Sub},
+    rc::Rc,
+};
 
 #[derive(Debug, Clone)]
 pub struct Value {
-    value: u16,
+    value: Fraction,
     from: Option<Rc<RefCell<Op>>>,
     should_have_brackets: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Fraction {
+    numerator: isize,
+    denominator: isize,
+}
+
+impl Neg for Fraction {
+    type Output = Fraction;
+
+    fn neg(self) -> Self::Output {
+        Fraction {
+            numerator: -self.numerator,
+            denominator: self.denominator,
+        }
+    }
+}
+
+impl PartialOrd for Fraction {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Fraction {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (self.numerator * other.denominator).cmp(&(other.numerator * self.denominator))
+    }
+}
+
+impl Display for Fraction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.denominator == 1 {
+            write!(f, "{}", self.numerator)
+        } else {
+            write!(f, "{}/{}", self.numerator, self.denominator)
+        }
+    }
+}
+
+fn gcd(mut a: isize, mut b: isize) -> isize {
+    while b != 0 {
+        let t = b;
+        b = a % b;
+        a = t;
+    }
+    a
+}
+
+impl Fraction {
+    fn new(numerator: isize) -> Self {
+        Fraction {
+            numerator,
+            denominator: 1,
+        }
+    }
+
+    fn normalize(&mut self) {
+        if self.denominator == 1 {
+            return;
+        }
+
+        if self.denominator < 0 {
+            panic!("neg err")
+        }
+
+        let gcd = gcd(self.numerator, self.denominator);
+        self.numerator /= gcd;
+        self.denominator /= gcd;
+    }
+}
+
+impl Add for Fraction {
+    type Output = Fraction;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut ans = Fraction {
+            numerator: self.numerator * rhs.denominator + rhs.numerator * self.denominator,
+            denominator: self.denominator * rhs.denominator,
+        };
+        ans.normalize();
+        ans
+    }
+}
+
+impl Sub for Fraction {
+    type Output = Fraction;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut ans = Fraction {
+            numerator: self.numerator * rhs.denominator - rhs.numerator * self.denominator,
+            denominator: self.denominator * rhs.denominator,
+        };
+        ans.normalize();
+        ans
+    }
+}
+
+impl Mul for Fraction {
+    type Output = Fraction;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut ans = Fraction {
+            numerator: self.numerator * rhs.numerator,
+            denominator: self.denominator * rhs.denominator,
+        };
+        ans.normalize();
+        ans
+    }
+}
+
+impl Div for Fraction {
+    type Output = Fraction;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        let mut ans = Fraction {
+            numerator: self.numerator * rhs.denominator,
+            denominator: self.denominator * rhs.numerator,
+        };
+        ans.normalize();
+        ans
+    }
 }
 
 impl Value {
@@ -51,10 +179,10 @@ fn recursive_remove_brackets(root: &mut Value) {
     inner(root)
 }
 
-impl From<u16> for Value {
-    fn from(value: u16) -> Self {
+impl From<isize> for Value {
+    fn from(value: isize) -> Self {
         Value {
-            value,
+            value: Fraction::new(value),
             from: None,
             should_have_brackets: true,
         }
@@ -150,7 +278,7 @@ impl Op {
 
 fn add(a: &Value, b: &Value) -> Option<Value> {
     Some(Value {
-        value: a.value.checked_add(b.value)?,
+        value: a.value + b.value,
         from: Some(Rc::new(RefCell::new(Op::Add(a.clone(), b.clone())))),
         should_have_brackets: true,
     })
@@ -158,7 +286,7 @@ fn add(a: &Value, b: &Value) -> Option<Value> {
 
 fn sub(a: &Value, b: &Value) -> Option<Value> {
     Some(Value {
-        value: a.value.checked_sub(b.value)?,
+        value: a.value - b.value,
         from: Some(Rc::new(RefCell::new(Op::Sub(a.clone(), b.clone())))),
         should_have_brackets: true,
     })
@@ -166,22 +294,14 @@ fn sub(a: &Value, b: &Value) -> Option<Value> {
 
 fn mul(a: &Value, b: &Value) -> Option<Value> {
     Some(Value {
-        value: a.value.checked_mul(b.value)?,
+        value: a.value * b.value,
         from: Some(Rc::new(RefCell::new(Op::Mul(a.clone(), b.clone())))),
         should_have_brackets: true,
     })
 }
 
 fn div(a: &Value, b: &Value) -> Option<Value> {
-    if b.value == 0 {
-        return None;
-    }
-
-    if a.value % b.value != 0 {
-        return None;
-    }
-
-    if a.value < b.value {
+    if b.value.numerator == 0 {
         return None;
     }
 
@@ -193,7 +313,7 @@ fn div(a: &Value, b: &Value) -> Option<Value> {
 }
 
 fn try_solve_list(
-    target: u16,
+    target: isize,
     list: &mut Vec<Value>,
     a: &Value,
     b: &Value,
@@ -210,7 +330,7 @@ fn try_solve_list(
 }
 
 fn try_solve_list_all(
-    target: u16,
+    target: isize,
     list: &mut Vec<Value>,
     a: &Value,
     b: &Value,
@@ -225,9 +345,9 @@ fn try_solve_list_all(
     list.pop();
 }
 
-fn solve_inner_all(target: u16, list: &[Value], all_ans: &mut Vec<Value>) {
+fn solve_inner_all(target: isize, list: &[Value], all_ans: &mut Vec<Value>) {
     if list.len() == 1 {
-        if list[0].value == target {
+        if list[0].value.numerator == target && list[0].value.denominator == 1 {
             all_ans.push(list[0].clone());
         }
 
@@ -235,7 +355,7 @@ fn solve_inner_all(target: u16, list: &[Value], all_ans: &mut Vec<Value>) {
     }
 
     let mut new_list = list.to_vec();
-    new_list.sort_unstable_by_key(|x: &Value| u16::MAX - x.value);
+    new_list.sort_unstable_by_key(|x: &Value| -x.value);
     for i in 0..list.len() - 1 {
         if i > 0 && new_list[i].value == new_list[i - 1].value {
             continue;
@@ -259,9 +379,9 @@ fn solve_inner_all(target: u16, list: &[Value], all_ans: &mut Vec<Value>) {
     }
 }
 
-fn solve_inner(target: u16, list: &[Value]) -> Option<Value> {
+fn solve_inner(target: isize, list: &[Value]) -> Option<Value> {
     if list.len() == 1 {
-        if list[0].value == target {
+        if list[0].value.numerator == target && list[0].value.denominator == 1 {
             return Some(list[0].clone());
         }
 
@@ -269,7 +389,7 @@ fn solve_inner(target: u16, list: &[Value]) -> Option<Value> {
     }
 
     let mut new_list = list.to_vec();
-    new_list.sort_unstable_by_key(|x: &Value| 255 - x.value);
+    new_list.sort_unstable_by_key(|x: &Value| -x.value);
     for i in 0..list.len() - 1 {
         let item_i = new_list.remove(i);
         for j in i + 1..list.len() {
@@ -296,19 +416,19 @@ fn solve_inner(target: u16, list: &[Value]) -> Option<Value> {
     None
 }
 
-pub fn solve_list(target: u16, list: &[u16]) -> Option<Value> {
+pub fn solve_list(target: isize, list: &[isize]) -> Option<Value> {
     let list: Vec<Value> = list.iter().map(|x| (*x).into()).collect::<Vec<_>>();
     solve_inner(target, &list)
 }
 
-pub fn solve_list_all(target: u16, list: &[u16]) -> Vec<Value> {
+pub fn solve_list_all(target: isize, list: &[isize]) -> Vec<Value> {
     let mut ans = Vec::new();
     let list: Vec<Value> = list.iter().map(|x| (*x).into()).collect::<Vec<_>>();
     solve_inner_all(target, &list, &mut ans);
     ans
 }
 
-pub fn solve_24(a: u16, b: u16, c: u16, d: u16) -> Option<Value> {
+pub fn solve_24(a: isize, b: isize, c: isize, d: isize) -> Option<Value> {
     solve_list(24, &[a, b, c, d])
 }
 
@@ -341,8 +461,9 @@ mod tests {
 
     #[test]
     fn it_works() {
-        println!("{}", solve_24(9, 2, 7, 6).unwrap().show());
         println!("{}", solve_24(7, 7, 2, 1).unwrap().show());
+        println!("{}", solve_24(9, 2, 7, 6).unwrap().show());
+        println!("{}", solve_24(8, 3, 8, 3).unwrap().show());
         println!("{}", solve_24(9, 9, 8, 3).unwrap().show());
         println!("{}", solve_24(11, 12, 13, 9).unwrap().show());
         println!("{}", solve_24(11, 12, 13, 9).unwrap().show());
