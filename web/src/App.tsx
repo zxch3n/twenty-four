@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { solve } from "wasm24";
+import { solve_all } from "wasm24";
 
 function App() {
   const [target, setTarget] = useState(24);
   const [value, setValue] = useState("");
-  const [ans, setAns] = useState("");
+  const [ans, setAns] = useState<string[]>([]);
+  const [info, setInfo] = useState("");
 
   return (
     <div className="dark flex min-h-[100vh] w-full flex-col items-center bg-slate-800 pt-5 text-gray-100">
@@ -48,15 +49,22 @@ function App() {
 
                     return ans
                   });
+                if (values.length >= 7) {
+                  throw "数字个数过多，最多支持6个数字";
+                }
+
                 const input = Uint16Array.from(values);
-                const ans = solve(target, input);
-                if (ans) {
-                  setAns(ans + " = " + target);
+                const ans = solve_all(target, input);
+                if (ans.length > 0) {
+                  setInfo(`共有 ${ans.length} 种解法`);
+                  setAns(ans);
                 } else {
-                  setAns("No solution found");
+                  setInfo("No solution found");
+                  setAns([]);
                 }
               } catch (e) {
-                setAns("Invalid input: " + e);
+                setInfo("Invalid input: " + e);
+                setAns([]);
               }
             }}
           >
@@ -65,7 +73,16 @@ function App() {
         </div>
 
       </div>
-      <div className="min-w-[280px] mt-3 text-left font-mono">{ans}</div>
+      <div className="min-w-[280px] mt-3 text-left font-mono">
+        {info}
+        {
+          ans.map((x, i) => (
+            <div key={i} className="mt-2">
+              {x} = {target}
+            </div>
+          ))
+        }
+      </div>
     </div>
   );
 }

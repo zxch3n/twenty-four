@@ -1,4 +1,6 @@
-use twenty_four::solve_list;
+use std::collections::HashSet;
+
+use twenty_four::{solve_list, solve_list_all};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -21,4 +23,14 @@ macro_rules! console_log {
 #[wasm_bindgen]
 pub fn solve(target: u16, list: Vec<u16>) -> Option<String> {
     Some(solve_list(target, &list)?.show())
+}
+
+#[wasm_bindgen]
+pub fn solve_all(target: u16, list: Vec<u16>) -> Vec<String> {
+    let ans = solve_list_all(target, &list);
+    let ans = ans
+        .into_iter()
+        .map(|mut x| x.show())
+        .collect::<HashSet<String>>();
+    ans.into_iter().collect()
 }

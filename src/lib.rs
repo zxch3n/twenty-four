@@ -209,13 +209,63 @@ fn try_solve_list(
     None
 }
 
+fn try_solve_list_all(
+    target: u16,
+    list: &mut Vec<Value>,
+    a: &Value,
+    b: &Value,
+    f: impl FnOnce(&Value, &Value) -> Option<Value>,
+    ans: &mut Vec<Value>,
+) {
+    let Some(new_value) = (f)(a, b) else {
+        return;
+    };
+    list.push(new_value);
+    solve_inner_all(target, &*list, ans);
+    list.pop();
+}
+
+fn solve_inner_all(target: u16, list: &[Value], all_ans: &mut Vec<Value>) {
+    if list.len() == 1 {
+        if list[0].value == target {
+            all_ans.push(list[0].clone());
+        }
+
+        return;
+    }
+
+    let mut new_list = list.to_vec();
+    new_list.sort_unstable_by_key(|x: &Value| u16::MAX - x.value);
+    for i in 0..list.len() - 1 {
+        if i > 0 && new_list[i].value == new_list[i - 1].value {
+            continue;
+        }
+
+        let item_i = new_list.remove(i);
+        for j in i + 1..list.len() {
+            if j > i + 1 && new_list[j - 1].value == new_list[j - 2].value {
+                continue;
+            }
+
+            let item_j = new_list.remove(j - 1);
+            try_solve_list_all(target, &mut new_list, &item_i, &item_j, add, all_ans);
+            try_solve_list_all(target, &mut new_list, &item_i, &item_j, sub, all_ans);
+            try_solve_list_all(target, &mut new_list, &item_i, &item_j, mul, all_ans);
+            try_solve_list_all(target, &mut new_list, &item_i, &item_j, div, all_ans);
+            new_list.insert(j - 1, item_j);
+        }
+
+        new_list.insert(i, item_i);
+    }
+}
+
 fn solve_inner(target: u16, list: &[Value]) -> Option<Value> {
     if list.len() == 1 {
         if list[0].value == target {
             return Some(list[0].clone());
-        } else {
-            return None;
         }
+
+        return None;
     }
 
     let mut new_list = list.to_vec();
@@ -251,6 +301,13 @@ pub fn solve_list(target: u16, list: &[u16]) -> Option<Value> {
     solve_inner(target, &list)
 }
 
+pub fn solve_list_all(target: u16, list: &[u16]) -> Vec<Value> {
+    let mut ans = Vec::new();
+    let list: Vec<Value> = list.iter().map(|x| (*x).into()).collect::<Vec<_>>();
+    solve_inner_all(target, &list, &mut ans);
+    ans
+}
+
 pub fn solve_24(a: u16, b: u16, c: u16, d: u16) -> Option<Value> {
     solve_list(24, &[a, b, c, d])
 }
@@ -258,6 +315,17 @@ pub fn solve_24(a: u16, b: u16, c: u16, d: u16) -> Option<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn test_solve_all() {
+        println!(
+            "{}",
+            solve_list_all(24, &[8, 1, 11, 9])
+                .into_iter()
+                .map(|mut x| x.show())
+                .collect::<Vec<_>>()
+                .join(", \n")
+        );
+    }
 
     #[test]
     fn test_brackets() {
