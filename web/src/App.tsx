@@ -44,10 +44,10 @@ function App() {
                   .map((x) => {
                     const ans = parseInt(x);
                     if (ans >= 65536) {
-                      throw "Number too large"
+                      throw "Number too large";
                     }
 
-                    return ans
+                    return ans;
                   });
                 if (values.length >= 7) {
                   throw "数字个数过多，最多支持6个数字";
@@ -64,6 +64,7 @@ function App() {
                 }
               } catch (e) {
                 setInfo("Invalid input: " + e);
+                console.error(e);
                 setAns([]);
               }
             }}
@@ -71,17 +72,14 @@ function App() {
             Calculate
           </button>
         </div>
-
       </div>
-      <div className="min-w-[280px] mt-3 text-left font-mono">
+      <div className="mt-3 min-w-[280px] text-left font-mono">
         {info}
-        {
-          ans.map((x, i) => (
-            <div key={i} className="mt-2">
-              {x} = {target}
-            </div>
-          ))
-        }
+        {ans.map((x, i) => (
+          <div key={i} className="mt-2">
+            {x} = {target}
+          </div>
+        ))}
       </div>
     </div>
   );

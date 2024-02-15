@@ -30,6 +30,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "throttle-debounce": "^5.0.0",
+    "upgrade": "^1.1.0",
     "wasm24": "file:./wasm24"
   },
   "devDependencies": {

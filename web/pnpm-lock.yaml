@@ -56,6 +56,9 @@ dependencies:
   throttle-debounce:
     specifier: ^5.0.0
     version: 5.0.0
+  upgrade:
+    specifier: ^1.1.0
+    version: 1.1.0
   wasm24:
     specifier: file:./wasm24
     version: file:wasm24
@@ -9056,6 +9059,10 @@ packages:
       browserslist: 4.22.2
       escalade: 3.1.1
       picocolors: 1.0.0
+
+  /upgrade@1.1.0:
+    resolution: {integrity: sha512-NtkVvqVCqsJo5U3mYRum2Tw6uCltOxfIJ/AfTZeTmw6U39IB5X23xF+kRZ9aiPaORqeiQQ7Q209/ibhOvxzwHA==}
+    dev: false
 
   /uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}

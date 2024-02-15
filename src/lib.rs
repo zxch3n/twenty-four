@@ -12,10 +12,12 @@ pub struct Value {
     should_have_brackets: bool,
 }
 
+type Num = i64;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Fraction {
-    numerator: isize,
-    denominator: isize,
+    numerator: Num,
+    denominator: Num,
 }
 
 impl Neg for Fraction {
@@ -51,7 +53,7 @@ impl Display for Fraction {
     }
 }
 
-fn gcd(mut a: isize, mut b: isize) -> isize {
+fn gcd(mut a: Num, mut b: Num) -> Num {
     while b != 0 {
         let t = b;
         b = a % b;
@@ -61,7 +63,7 @@ fn gcd(mut a: isize, mut b: isize) -> isize {
 }
 
 impl Fraction {
-    fn new(numerator: isize) -> Self {
+    fn new(numerator: Num) -> Self {
         Fraction {
             numerator,
             denominator: 1,
@@ -84,54 +86,60 @@ impl Fraction {
 }
 
 impl Add for Fraction {
-    type Output = Fraction;
+    type Output = Option<Fraction>;
 
     fn add(self, rhs: Self) -> Self::Output {
         let mut ans = Fraction {
-            numerator: self.numerator * rhs.denominator + rhs.numerator * self.denominator,
-            denominator: self.denominator * rhs.denominator,
+            numerator: self
+                .numerator
+                .checked_mul(rhs.denominator)?
+                .checked_add(rhs.numerator.checked_mul(self.denominator)?)?,
+            denominator: self.denominator.checked_mul(rhs.denominator)?,
         };
         ans.normalize();
-        ans
+        Some(ans)
     }
 }
 
 impl Sub for Fraction {
-    type Output = Fraction;
+    type Output = Option<Fraction>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         let mut ans = Fraction {
-            numerator: self.numerator * rhs.denominator - rhs.numerator * self.denominator,
-            denominator: self.denominator * rhs.denominator,
+            numerator: self
+                .numerator
+                .checked_mul(rhs.denominator)?
+                .checked_sub(rhs.numerator.checked_mul(self.denominator)?)?,
+            denominator: self.denominator.checked_mul(rhs.denominator)?,
         };
         ans.normalize();
-        ans
+        Some(ans)
     }
 }
 
 impl Mul for Fraction {
-    type Output = Fraction;
+    type Output = Option<Fraction>;
 
     fn mul(self, rhs: Self) -> Self::Output {
         let mut ans = Fraction {
-            numerator: self.numerator * rhs.numerator,
-            denominator: self.denominator * rhs.denominator,
+            numerator: self.numerator.checked_mul(rhs.numerator)?,
+            denominator: self.denominator.checked_mul(rhs.denominator)?,
         };
         ans.normalize();
-        ans
+        Some(ans)
     }
 }
 
 impl Div for Fraction {
-    type Output = Fraction;
+    type Output = Option<Fraction>;
 
     fn div(self, rhs: Self) -> Self::Output {
         let mut ans = Fraction {
-            numerator: self.numerator * rhs.denominator,
-            denominator: self.denominator * rhs.numerator,
+            numerator: self.numerator.checked_mul(rhs.denominator)?,
+            denominator: self.denominator.checked_mul(rhs.numerator)?,
         };
         ans.normalize();
-        ans
+        Some(ans)
     }
 }
 
@@ -179,8 +187,8 @@ fn recursive_remove_brackets(root: &mut Value) {
     inner(root)
 }
 
-impl From<isize> for Value {
-    fn from(value: isize) -> Self {
+impl From<Num> for Value {
+    fn from(value: Num) -> Self {
         Value {
             value: Fraction::new(value),
             from: None,
@@ -278,7 +286,7 @@ impl Op {
 
 fn add(a: &Value, b: &Value) -> Option<Value> {
     Some(Value {
-        value: a.value + b.value,
+        value: (a.value + b.value)?,
         from: Some(Rc::new(RefCell::new(Op::Add(a.clone(), b.clone())))),
         should_have_brackets: true,
     })
@@ -286,7 +294,7 @@ fn add(a: &Value, b: &Value) -> Option<Value> {
 
 fn sub(a: &Value, b: &Value) -> Option<Value> {
     Some(Value {
-        value: a.value - b.value,
+        value: (a.value - b.value)?,
         from: Some(Rc::new(RefCell::new(Op::Sub(a.clone(), b.clone())))),
         should_have_brackets: true,
     })
@@ -294,7 +302,7 @@ fn sub(a: &Value, b: &Value) -> Option<Value> {
 
 fn mul(a: &Value, b: &Value) -> Option<Value> {
     Some(Value {
-        value: a.value * b.value,
+        value: (a.value * b.value)?,
         from: Some(Rc::new(RefCell::new(Op::Mul(a.clone(), b.clone())))),
         should_have_brackets: true,
     })
@@ -306,14 +314,14 @@ fn div(a: &Value, b: &Value) -> Option<Value> {
     }
 
     Some(Value {
-        value: a.value / b.value,
+        value: (a.value / b.value)?,
         from: Some(Rc::new(RefCell::new(Op::Div(a.clone(), b.clone())))),
         should_have_brackets: true,
     })
 }
 
 fn try_solve_list(
-    target: isize,
+    target: Num,
     list: &mut Vec<Value>,
     a: &Value,
     b: &Value,
@@ -330,7 +338,7 @@ fn try_solve_list(
 }
 
 fn try_solve_list_all(
-    target: isize,
+    target: Num,
     list: &mut Vec<Value>,
     a: &Value,
     b: &Value,
@@ -345,7 +353,7 @@ fn try_solve_list_all(
     list.pop();
 }
 
-fn solve_inner_all(target: isize, list: &[Value], all_ans: &mut Vec<Value>) {
+fn solve_inner_all(target: Num, list: &[Value], all_ans: &mut Vec<Value>) {
     if list.len() == 1 {
         if list[0].value.numerator == target && list[0].value.denominator == 1 {
             all_ans.push(list[0].clone());
@@ -379,7 +387,7 @@ fn solve_inner_all(target: isize, list: &[Value], all_ans: &mut Vec<Value>) {
     }
 }
 
-fn solve_inner(target: isize, list: &[Value]) -> Option<Value> {
+fn solve_inner(target: Num, list: &[Value]) -> Option<Value> {
     if list.len() == 1 {
         if list[0].value.numerator == target && list[0].value.denominator == 1 {
             return Some(list[0].clone());
@@ -416,19 +424,19 @@ fn solve_inner(target: isize, list: &[Value]) -> Option<Value> {
     None
 }
 
-pub fn solve_list(target: isize, list: &[isize]) -> Option<Value> {
+pub fn solve_list(target: Num, list: &[Num]) -> Option<Value> {
     let list: Vec<Value> = list.iter().map(|x| (*x).into()).collect::<Vec<_>>();
     solve_inner(target, &list)
 }
 
-pub fn solve_list_all(target: isize, list: &[isize]) -> Vec<Value> {
+pub fn solve_list_all(target: Num, list: &[Num]) -> Vec<Value> {
     let mut ans = Vec::new();
     let list: Vec<Value> = list.iter().map(|x| (*x).into()).collect::<Vec<_>>();
     solve_inner_all(target, &list, &mut ans);
     ans
 }
 
-pub fn solve_24(a: isize, b: isize, c: isize, d: isize) -> Option<Value> {
+pub fn solve_24(a: Num, b: Num, c: Num, d: Num) -> Option<Value> {
     solve_list(24, &[a, b, c, d])
 }
 
@@ -472,5 +480,10 @@ mod tests {
         assert!(solve_24(7, 7, 25, 1).is_some());
         assert!(solve_24(2, 2, 2, 2).is_none());
         assert!(solve_24(1, 1, 1, 1).is_none());
+    }
+
+    #[test]
+    fn issue() {
+        dbg!(solve_list_all(24, &[8, 3, 3, 1, 30000, 65535]));
     }
 }

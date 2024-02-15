@@ -9,7 +9,7 @@ pub fn main() {
             .iter()
             .skip(1)
             .map(|x| x.parse().unwrap())
-            .collect::<Vec<isize>>(),
+            .collect::<Vec<i64>>(),
     );
     if let Some(mut ans) = ans {
         println!("{}", ans.show());

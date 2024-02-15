@@ -21,16 +21,19 @@ macro_rules! console_log {
 }
 
 #[wasm_bindgen]
-pub fn solve(target: isize, list: Vec<isize>) -> Option<String> {
-    Some(solve_list(target, &list)?.show())
+pub fn solve(target: i32, list: Vec<i32>) -> Option<String> {
+    let l: Vec<i64> = list.iter().map(|x| *x as i64).collect();
+    Some(solve_list(target as i64, &l)?.show())
 }
 
 #[wasm_bindgen]
-pub fn solve_all(target: isize, list: Vec<isize>) -> Vec<String> {
-    let ans = solve_list_all(target, &list);
+pub fn solve_all(target: i32, list: Vec<i32>) -> Vec<String> {
+    let l: Vec<i64> = list.iter().map(|x| *x as i64).collect();
+    let ans = solve_list_all(target as i64, &l);
     let ans = ans
         .into_iter()
         .map(|mut x| x.show())
         .collect::<HashSet<String>>();
+
     ans.into_iter().collect()
 }
